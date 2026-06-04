@@ -123,7 +123,7 @@ impl Gunyah {
     /// See the documentation for `GUNYAH_CREATE_VM`.
     ///
     /// * `vm_type` - Platform and architecture specific platform VM type. A value of 0 is the equivalent
-    ///               to using the default VM type.
+    ///   to using the default VM type.
     /// # Example
     ///
     /// ```
@@ -148,7 +148,7 @@ impl Gunyah {
     /// See the documentation for `GUNYAH_CREATE_VM`.
     ///
     /// * `vm_type` - Platform and architecture specific platform VM type. A value of 0 is the equivalent
-    ///               to using the default VM type.
+    ///   to using the default VM type.
     /// # Example
     ///
     /// ```
