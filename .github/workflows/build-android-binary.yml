@@ -72,16 +72,3 @@ jobs:
         with:
           name: gunyah-test-vmm-android-binaries
           path: dist/
-          Example push steps:
-            adb push gunyah-test-vmm /data/local/tmp/gunyah-test-vmm
-            adb shell chmod +x /data/local/tmp/gunyah-test-vmm
-
-          Example run on device:
-            /data/local/tmp/gunyah-test-vmm Image initrd.img
-          EOF
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: gunyah-test-vmm-android-binary
-          path: dist/
