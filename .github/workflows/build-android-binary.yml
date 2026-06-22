@@ -1,4 +1,4 @@
-name: Build Android binary
+name: Build Android binaries
 
 on:
   workflow_dispatch:
@@ -24,17 +24,54 @@ jobs:
         run: |
           cargo build --release --target aarch64-linux-android
 
+      - name: Build test binaries without running
+        run: |
+          cargo test --workspace --target aarch64-linux-android --no-run
+
       - name: Prepare artifact contents
         run: |
-          mkdir -p dist
+          set -euo pipefail
+          mkdir -p dist/tests
           cp target/aarch64-linux-android/release/gunyah-test-vmm dist/
+
+          find target/aarch64-linux-android/debug/deps \
+            -maxdepth 1 \
+            -type f \
+            -executable \
+            ! -name '*.d' \
+            ! -name '*.rlib' \
+            ! -name '*.rmeta' \
+            ! -name '*.so' \
+            -exec cp {} dist/tests/ \;
+
           cat > dist/README-device.txt <<'EOF'
-          This artifact contains the Android binary for gunyah-test-vmm.
+          This artifact contains:
+            - gunyah-test-vmm: the main Android binary
+            - tests/: Rust test binaries built with `cargo test --workspace --no-run`
 
-          This repository README documents Android build/test setup, but does not
-          provide guest image/initrd artifacts. To run on device manually, you must
-          also provide your own guest kernel image and ramdisk.
+          Manual examples:
 
+            Main binary:
+              adb push gunyah-test-vmm /data/local/tmp/gunyah-test-vmm
+              adb shell chmod +x /data/local/tmp/gunyah-test-vmm
+              adb shell /data/local/tmp/gunyah-test-vmm Image initrd.img
+
+            Test binary:
+              adb push tests/<test-binary> /data/local/tmp/<test-binary>
+              adb shell chmod +x /data/local/tmp/<test-binary>
+              adb shell /data/local/tmp/<test-binary> --test-threads 1
+
+          Notes:
+            - `gunyah-test-vmm` requires you to provide your own guest kernel image and ramdisk.
+            - Test binaries are separate from `gunyah-test-vmm` and accept Rust test harness args
+              such as `--test-threads 1`, `--ignored`, and `--nocapture`.
+          EOF
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gunyah-test-vmm-android-binaries
+          path: dist/
           Example push steps:
             adb push gunyah-test-vmm /data/local/tmp/gunyah-test-vmm
             adb shell chmod +x /data/local/tmp/gunyah-test-vmm
