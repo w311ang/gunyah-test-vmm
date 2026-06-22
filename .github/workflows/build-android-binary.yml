@@ -1,0 +1,50 @@
+name: Build Android binary
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust target and tools
+        run: |
+          rustup target add aarch64-linux-android
+          rustup component add llvm-tools
+
+      - name: Set up Android NDK
+        run: |
+          ./setup-android.sh
+
+      - name: Build release binary
+        run: |
+          cargo build --release --target aarch64-linux-android
+
+      - name: Prepare artifact contents
+        run: |
+          mkdir -p dist
+          cp target/aarch64-linux-android/release/gunyah-test-vmm dist/
+          cat > dist/README-device.txt <<'EOF'
+          This artifact contains the Android binary for gunyah-test-vmm.
+
+          This repository README documents Android build/test setup, but does not
+          provide guest image/initrd artifacts. To run on device manually, you must
+          also provide your own guest kernel image and ramdisk.
+
+          Example push steps:
+            adb push gunyah-test-vmm /data/local/tmp/gunyah-test-vmm
+            adb shell chmod +x /data/local/tmp/gunyah-test-vmm
+
+          Example run on device:
+            /data/local/tmp/gunyah-test-vmm Image initrd.img
+          EOF
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gunyah-test-vmm-android-binary
+          path: dist/
